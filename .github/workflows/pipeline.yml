@@ -1,0 +1,32 @@
+name: GitHubActions_Test
+
+on:
+  push:
+    branches:
+      - ino_dev
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name:  Build Docker image
+        run: docker build --no-cache -t aplikacja .
+
+      - name: Verify docker
+        run: |
+          docker images | grep aplikacja
+
+      - name: Tar
+        run: |
+          mkdir -p build_output
+          docker save aplikacja > build_output/obraz-aplikacji.tar
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: artefakty
+          path: build_output/
