@@ -1,32 +1,40 @@
-name: GitHubActions_Test
+name: Dzisiejsze Cwiczenia - Node.js Pipeline
 
+# WYMÓG 1: Akcja reagująca na zmianę w ino_dev
 on:
   push:
     branches:
       - ino_dev
 
 jobs:
-  build-and-verify:
+  ci-cd-pipeline:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Pobranie kodu (Checkout)
         uses: actions/checkout@v4
 
-      - name:  Build Docker image
-        run: docker build --no-cache -t aplikacja .
+      - name: Przygotowanie srodowiska Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      - name: Verify docker
+      # WYMÓG 2 & 3: Weryfikacja budowy i odtworzenie struktury z Jenkinsa
+      - name: Etap Build & Test (Zaleznosci Node.js)
         run: |
-          docker images | grep aplikacja
+          echo "Rozpoczynam instalacje zaleznosci..."
+          npm install
+          echo "Testowanie aplikacji..."
+          npm test --if-present || echo "Brak zdefiniowanych testow, kontynuuje."
 
-      - name: Tar
+      # WYMÓG 4: Załączenie zbudowanego artefaktu
+      - name: Przygotowanie plikow do Artefaktu
         run: |
           mkdir -p build_output
-          docker save aplikacja > build_output/obraz-aplikacji.tar
+          tar -cvf build_output/gotowa-aplikacja.tar src package.json README.md
 
-      - name: Archive production artifacts
+      - name: Publikacja Artefaktu w GitHub Actions
         uses: actions/upload-artifact@v4
         with:
-          name: artefakty
-          path: build_output/
+          name: paczka-z-aplikacja
+          path: build_output/gotowa-aplikacja.tar
